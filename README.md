@@ -58,8 +58,7 @@ A minimal `use-package` configuration.
          ([remap recompile] . detached-compile-recompile)
          ;; Replace built in completion of sessions with `consult'
          ([remap detached-open-session] . detached-consult-session))
-  :custom ((detached-show-output-on-attach t)
-           (detached-terminal-data-command system-type)))
+  :custom ((detached-terminal-data-command system-type)))
 ```
 
 The users are required to call `detached-init`. This function orchestrates the integration with all other internal and external packages that `detached.el` supports. These are:
