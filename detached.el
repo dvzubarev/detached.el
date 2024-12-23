@@ -2036,8 +2036,9 @@ start searching at NUMBER offset."
   "Return the size of SESSION's output."
   (if (detached-session-active-p session)
       ""
-    (file-size-human-readable
-     (detached--session-size session))))
+    (if-let ((sz (detached--session-size session)))
+        (file-size-human-readable sz)
+      "")))
 
 (defun detached--status-str (session)
   "Return string if SESSION has failed."
