@@ -1651,10 +1651,18 @@ Optionally make the path LOCAL to host."
         (cl-assert (bobp))
         (read (current-buffer))))))
 
+(defun detached--local-process-attributes (pid)
+  "Always return attributes for the local process PID.
+Like `process-attributes' but do not use `tramp-file-name-handler' even
+if `default-directory' points to the remote file."
+  (let ((inhibit-file-name-handlers '(tramp-file-name-handler))
+        (inhibit-file-name-operation 'process-attributes))
+    (process-attributes pid)))
+
 (defun detached--register-detached-emacs ()
   "Register the Emacs process."
   (let* ((file (expand-file-name "detached-emacsen" detached-db-directory))
-         (emacs-process (process-attributes (emacs-pid)))
+         (emacs-process (detached--local-process-attributes (emacs-pid)))
          (emacsen (detached--read-detached-emacsen)))
     (setf (alist-get (emacs-pid) emacsen) emacs-process)
     (with-temp-file file
@@ -1669,13 +1677,13 @@ Optionally make the path LOCAL to host."
     (thread-last initialized-emacsen
                  (seq-find (lambda (pid)
                              (when-let ((emacs-process (alist-get pid emacsen))
-                                        (process-attrs (process-attributes pid)))
+                                        (process-attrs (detached--local-process-attributes pid)))
                                (and
                                 ;; Make sure the args are the same
                                 (string= (alist-get 'args emacs-process)
                                          (alist-get 'args process-attrs))
-                                ;; Make sure process id of the parent is the same
-                                ;; see comment in detached--active-detached-emacsen
+                                ;; Make sure process id of the parent is the same.
+                                ;; See comment in detached--active-detached-emacsen.
                                 (or (daemonp)
                                     (= (alist-get 'ppid emacs-process)
                                        (alist-get 'ppid process-attrs)))
@@ -1692,7 +1700,7 @@ Optionally make the path LOCAL to host."
   "Return a list of active detached Emacsen."
   (thread-last (detached--read-detached-emacsen)
                (seq-filter (lambda (emacs-process)
-                             (when-let ((process-attrs (process-attributes (car emacs-process))))
+                             (when-let ((process-attrs (detached--local-process-attributes (car emacs-process))))
                                (and
                                 ;; Make sure the args are the same
                                 (string= (alist-get 'args (cdr emacs-process))
