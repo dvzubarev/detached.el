@@ -1008,7 +1008,11 @@ session validation."
 (cl-defun detached-session-start-command (session &key type)
   "Return command to start SESSION with specified TYPE."
   (when (detached--valid-dtach-executable-p session)
-    (detached-watch-session session)
+    (condition-case errvar
+        (detached-watch-session session)
+      (file-notify-error
+       (detached--db-remove-entry session)
+       (user-error "Failed to watch session dir: %s" (cadr errvar))))
     (detached-connection-local-variables
      (let* ((socket (detached--session-file session 'socket t))
             (detached-session-mode (detached--session-initial-mode session))
@@ -1458,12 +1462,13 @@ session is missing its deleted from the database."
                       (when (member session-id detached--unvalidated-session-ids)
                         (when detached-debug-enabled
                           (message "Session %s is set to active by validator" session-id))
-                        (let ((session (detached--db-get-session session-id)))
-                          (setq detached--unvalidated-session-ids
-                                (delete session-id detached--unvalidated-session-ids))
+                        ;; Session might be not started due to early errors.
+                        (when-let ((session (detached--db-get-session session-id)))
                           (setf (detached--session-state session) 'active)
                           (setf (detached--session-time session) start-time)
-                          (detached--db-update-entry session)))))))
+                          (detached--db-update-entry session))
+                        (setq detached--unvalidated-session-ids
+                              (delete session-id detached--unvalidated-session-ids)))))))
 
 (defun detached--session-file (session file &optional local)
   "Return the full path to SESSION's FILE.
