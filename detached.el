@@ -1670,8 +1670,10 @@ Optionally make the path LOCAL to host."
                                 (string= (alist-get 'args emacs-process)
                                          (alist-get 'args process-attrs))
                                 ;; Make sure process id of the parent is the same
-                                (= (alist-get 'ppid emacs-process)
-                                   (alist-get 'ppid process-attrs))
+                                ;; see comment in detached--active-detached-emacsen
+                                (or (daemonp)
+                                    (= (alist-get 'ppid emacs-process)
+                                       (alist-get 'ppid process-attrs)))
                                 ;; Make sure current Emacs is the right Emacs
                                 (= pid (emacs-pid)))))))))
 
@@ -1690,9 +1692,24 @@ Optionally make the path LOCAL to host."
                                 ;; Make sure the args are the same
                                 (string= (alist-get 'args (cdr emacs-process))
                                          (alist-get 'args process-attrs))
-                                ;; Make sure process id of the parent is the same
-                                (= (alist-get 'ppid (cdr emacs-process))
-                                   (alist-get 'ppid process-attrs))))))))
+                                ;; Make sure process id of the parent is the
+                                ;; same
+                                ;; Not sure about rationale of this
+                                ;; check. It is getting a little more trickier
+                                ;; when Emacs is running as a daemon. It seems
+                                ;; when detached-init is called at the startup
+                                ;; of Emacs, its process is not yet daemonized.
+                                ;; So there is actual ppid stored in
+                                ;; detached-emacsen file. But later when we are
+                                ;; getting process attributes for the already
+                                ;; daemonized process, its ppid is already
+                                ;; changed. It might be 1, but I would not rely
+                                ;; on it since it is not guaranteed for
+                                ;; new-style systemd daemons. So disable this check when
+                                ;; emacs is running as daemon.
+                                (or (daemonp)
+                                    (= (alist-get 'ppid (cdr emacs-process))
+                                       (alist-get 'ppid process-attrs)))))))))
 
 (defun detached--get-initialized-session (session)
   "Return an initialized copy of SESSION."
