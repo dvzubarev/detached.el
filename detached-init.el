@@ -46,6 +46,7 @@
 (declare-function detached-eshell-mode "detached-eshell")
 (declare-function detached-extra-projectile-run-compilation "detached-extra")
 (declare-function detached-extra-dired-rsync "detached-extra")
+(declare-function detached-extra-dirvish "detached-extra")
 (declare-function detached-list--db-update "detached-list")
 (declare-function detached-list--apply-filter "detached-list")
 (declare-function detached-org-babel-sh "detached-org")
@@ -94,15 +95,16 @@
 	map))
 
 (defvar detached-init-package-integration '((compile . detached-init--compile)
-											(dired . detached-init--dired)
-											(dired-rsync . detached-init--dired-rsync)
-											(embark . detached-init--embark)
-											(eshell . detached-init--eshell)
-											(nano-modeline . detached-init--nano-modeline)
-											(org . detached-init--org)
-											(projectile . detached-init--projectile)
-											(shell . detached-init--shell)
-											(vterm . detached-init--vterm))
+                                            (dired . detached-init--dired)
+                                            (dired-rsync . detached-init--dired-rsync)
+                                            (embark . detached-init--embark)
+                                            (eshell . detached-init--eshell)
+                                            (nano-modeline . detached-init--nano-modeline)
+                                            (org . detached-init--org)
+                                            (projectile . detached-init--projectile)
+                                            (shell . detached-init--shell)
+                                            (vterm . detached-init--vterm)
+                                            (dirvish . detached-init--dirvish))
   "Alist which contain names of packages and their initialization function.")
 
 ;;;; Functions
@@ -152,6 +154,11 @@
   "Initialize integration with `dired-rsync'."
   (advice-add 'dired-rsync--do-run
 			  :override #'detached-extra-dired-rsync))
+
+(defun detached-init--dirvish ()
+  "Initialize integration with `dirvish'."
+  (advice-add 'dirvish-yank--start-proc
+	      :around #'detached-extra-dirvish))
 
 (defun detached-init--projectile ()
   "Initialize integration with `projectile'."

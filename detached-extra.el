@@ -33,6 +33,7 @@
 
 (defvar detached-session-origin)
 (defvar detached-local-session)
+(defvar detached-enabled)
 
 ;;;; Functions
 
@@ -67,6 +68,23 @@ Optionally USE-COMINT-MODE"
 		   :severity (pcase status
 					   ('success 'moderate)
 					   ('failure 'high)))))
+
+
+;;;###autoload
+(defun detached-extra-dirvish (dirvish-yank--start-proc command details)
+  "Run COMMAND with `detached'."
+
+  (if detached-enabled
+      (progn
+        (when (listp command)
+          (user-error "Unable to create detach session on commands that are in form of a list!"))
+        (let* ((detached-local-session t)
+               (detached-session-origin 'rsync)
+               (detached-session-mode 'detached)
+               (session (detached-create-session command)))
+          (detached-start-session session)))
+
+    (funcall dirvish-yank--start-proc command details)))
 
 (provide 'detached-extra)
 
