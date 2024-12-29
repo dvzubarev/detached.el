@@ -35,6 +35,14 @@
 (defvar detached-local-session)
 (defvar detached-enabled)
 
+(defcustom detached-extra-ntfysh-topic nil
+  "Topic for ntfy.sh for publishing alerts."
+  :type 'string :group 'detached)
+(defcustom detached-extra-ntfysh-server "https://ntfy.sh"
+  "Ntfy.sh server, you can specify your own self-hosted server here."
+  :type 'string :group 'detached)
+
+
 ;;;; Functions
 
 ;;;###autoload
@@ -85,6 +93,31 @@ Optionally USE-COMINT-MODE"
           (detached-start-session session)))
 
     (funcall dirvish-yank--start-proc command details)))
+
+
+
+(defun detached-exta--ntfysh-publish-message (session)
+  "Send message via ntfy.sh when SESSION beocmes inactive."
+  (when (null detached-extra-ntfysh-topic)
+    (user-error "Set ntfy.sh topic in 'detached-extra-ntfysh-topic'!"))
+  (let ((status (detached-session-status session))
+        (host (detached-session-host-name session)))
+    ;; TODO error handling
+    (start-process "detached-nfty-sh" nil "curl"
+                   "-H" (format "Title: %s" (pcase status
+                                              ('success (format "Detached finished [%s]" host))
+                                              ('failure (format "Detached failed [%s]" host))))
+                   "-H" (format "Tags: %s" (pcase status
+                                             ('success "white_check_mark")
+                                             ('failure "x")))
+                   "-H" (format "Priority: %s" (pcase status
+                                                 ('success "default")
+                                                 ('failure "high")))
+                   "-d" (detached-session-command session)
+                   (format "%s/%s"
+                           detached-extra-ntfysh-server
+                           detached-extra-ntfysh-topic))))
+
 
 (provide 'detached-extra)
 
