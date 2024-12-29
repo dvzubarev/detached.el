@@ -28,20 +28,24 @@
 (require 'dired)
 (require 'detached)
 
+(defvar detached--async-shell-inside-advice)
 ;;;; Functions
 
 ;;;###autoload
 (defun detached-dired-do-shell-command (dired-do-shell-command &rest args)
   "Ensure `detached' is used before running DIRED-DO-SHELL-COMMAND with ARGS."
-  (cl-letf* ((detached-session-origin 'dired)
-			 ((symbol-function #'dired-run-shell-command)
-			  (lambda (command)
-                (let ((session (detached-create-session command)))
-                  (detached-start-shell-command-session session))
-				nil)))
-	(pcase-let* ((`(,command ,arg ,file-list) args)
-				 (modified-args `(,(string-remove-suffix " &" command) ,arg ,file-list)))
-	  (apply dired-do-shell-command modified-args))))
+  (if detached-enabled
+      (cl-letf* ((detached--async-shell-inside-advice t)
+                 (detached-session-origin 'dired)
+                 ((symbol-function #'dired-run-shell-command)
+                  (lambda (command)
+                    (let ((session (detached-create-session command)))
+                      (detached-start-shell-command-session session))
+                    nil)))
+        (pcase-let* ((`(,command ,arg ,file-list) args)
+                     (modified-args `(,(string-remove-suffix " &" command) ,arg ,file-list)))
+          (apply dired-do-shell-command modified-args)))
+    (apply dired-do-shell-command args)))
 
 (provide 'detached-dired)
 

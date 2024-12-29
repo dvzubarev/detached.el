@@ -24,6 +24,7 @@
 ;;; Code:
 
 ;;;; Requirements
+(require 'detached)
 
 (declare-function detached-compile "detached")
 (declare-function detached-start-session "detached")
@@ -79,8 +80,23 @@ Optionally USE-COMINT-MODE"
 
 
 ;;;###autoload
+(defun detached-extra-launch-cmd-w-detached (key-sequence)
+  "This function allow to enable detached per command.
+KEY-SEQUENCE is the command that should start in detached session. For
+example, this command is bound to a <C-;> and compile is bound to <C-c C-c>,
+ then after key sequence - <C-; C-c C-c> compilation will start in
+detached session."
+  (interactive
+   (list (read-key-sequence "Press key: ")))
+  (when-let* ((sym (key-binding key-sequence))
+              ((commandp sym t)))
+    (let ((detached-enabled t))
+      (call-interactively sym))))
+
+
+;;;###autoload
 (defun detached-extra-dirvish (dirvish-yank--start-proc command details)
-  "Run COMMAND with `detached'."
+  "Run dirvish COMMAND with `detached'."
 
   (if detached-enabled
       (progn

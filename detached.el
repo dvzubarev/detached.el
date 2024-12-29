@@ -377,6 +377,9 @@ This version is encoded as [package-version].[revision].")
 (defvar detached--update-database t
   "Update the database when value is t.")
 
+(defvar detached--async-shell-inside-advice nil
+  "Whether function is called inside advice.")
+
 (defconst detached--shell-command-buffer "*Detached Shell Command*"
   "Name of the `detached-shell-command' buffer.")
 
@@ -462,6 +465,18 @@ Optionally SUPPRESS-OUTPUT if prefix-argument is provided."
                                     (if suppress-output 'detached 'attached)))
          (session (detached-create-session command)))
     (detached-start-session session)))
+
+;;;###autoload
+(defun detached-async-shell-cmd-advice (orig-fn command &rest args)
+  "This is advice for `async-shell-command'.
+This function do nothing if `detached-enabled' is nil. ORIG-FN is
+supposed to be `async-shell-command' and its arguments (COMMAND and rest
+ARGS)."
+  (if (and detached-enabled
+           (not detached--async-shell-inside-advice))
+      (let ((detached--async-shell-inside-advice t))
+        (funcall #'detached-shell-command command))
+    (apply orig-fn command args)))
 
 ;;;###autoload
 (defun detached-open-session (session)

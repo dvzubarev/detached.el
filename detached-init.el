@@ -40,6 +40,7 @@
 (declare-function detached-diff-session "detached")
 (declare-function detached-initialize-sessions "detached")
 (declare-function detached-shell-mode "detached")
+(declare-function detached-async-shell-cmd-advice "detached")
 
 (declare-function detached-compile--start "detached-compile")
 (declare-function detached-dired-do-shell-command "detached-dired")
@@ -95,6 +96,7 @@
 	map))
 
 (defvar detached-init-package-integration '((compile . detached-init--compile)
+                                            (async-cmd . detached-init--async-shell-cmd)
                                             (dired . detached-init--dired)
                                             (dired-rsync . detached-init--dired-rsync)
                                             (embark . detached-init--embark)
@@ -135,6 +137,13 @@
   "Initialize integration with `compile'."
   (add-hook 'compilation-start-hook #'detached-compile--start)
   (add-hook 'compilation-shell-minor-mode-hook #'detached-shell-mode))
+
+(defun detached-init--async-shell-cmd ()
+  "Initialize basic integration into async commands.
+Advising `async-shell-command' allows to use detached with all packages
+that wrap this command. For example
+`projectile-run-async-shell-command-in-root'."
+  (advice-add 'async-shell-command :around #'detached-async-shell-cmd-advice))
 
 (defun detached-init--eshell ()
   "Initialize integration with `eshell'."

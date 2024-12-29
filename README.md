@@ -309,6 +309,32 @@ By default `detached.el` uses the built in `notifications` library to issue a no
 (setq detached-notification-function #'detached-extra-alert-notification)
 ```
 
+## Run detached session per command
+When detached.el is initted you can't choose which commands should be started in
+detached session and which are lightweight enough and there is no need in
+detaching them. Also there is limited support for per-project setting.
+
+If you want more fine-grained control on when the detached session is start you can use following setting:
+
+``` emacs-lisp
+(setq detached-init-allow-list '(async-cmd compile dired))
+(detached-init)
+(define-key global-map "\C-;" #'detached-extra-launch-cmd-w-detached)
+```
+`<C-;>` keybinding allows you to launch detached session per command.
+For example, if `compile` is bound to `<C-c C-c>`,
+ then after key sequence - `<C-; C-c C-c>` compilation will start in
+detached session.
+If you want enable detached per project, set `detached-enabled` to `t` in `.dir-locals.el` file.
+
+Supported commands:
+- `async-shell-command` and all other wrapper commands that use it, e.g. `projectile-run-async-shell-command-in-root`.
+- `dired-do-async-shell-command`
+- `compile`, `recompile`
+- `dirvish-rsync`
+
+
+
 # Versions
 
 Information about larger changes that has been made between versions can be found in the `CHANGELOG.org`
