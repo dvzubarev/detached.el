@@ -112,7 +112,7 @@ detached session."
 
 
 
-(defun detached-exta--ntfysh-publish-message (session)
+(defun detached-extra--ntfysh-publish-message (session)
   "Send message via ntfy.sh when SESSION beocmes inactive."
   (when (null detached-extra-ntfysh-topic)
     (user-error "Set ntfy.sh topic in 'detached-extra-ntfysh-topic'!"))
