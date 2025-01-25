@@ -111,7 +111,7 @@ detached session."
     (funcall dirvish-yank--start-proc command details)))
 
 
-
+;;;###autoload
 (defun detached-extra--ntfysh-publish-message (session)
   "Send message via ntfy.sh when SESSION beocmes inactive."
   (when (null detached-extra-ntfysh-topic)
