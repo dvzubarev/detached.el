@@ -105,7 +105,7 @@ detached session."
         (let* ((detached-local-session t)
                (detached-session-origin 'rsync)
                (detached-session-mode 'detached)
-               (session (detached-create-session command)))
+               (session (detached-create-session (string-replace "\"" "\\\"" command))))
           (detached-start-session session)))
 
     (funcall dirvish-yank--start-proc command details)))
